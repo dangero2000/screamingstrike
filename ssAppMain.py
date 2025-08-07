@@ -21,6 +21,7 @@ import gameOptions
 import gameResult
 import globalVars
 import itemVoicePlayer
+import environmentPlayer
 import scorePostingAdapter
 import scoreViewAdapter
 import stats
@@ -74,6 +75,7 @@ class ssAppMain(window.SingletonWindow):
         self.options = gameOptions.GameOptions()
         self.options.initialize(OPTIONS_FILENAME)
         self.itemVoices = self.getItemVoicesList()
+        self.environments = self.getEnvironmentsList()
         self.locales = self.getLocalesList()
         self.initTranslation()
         self.music = bgtsound.sound()
@@ -112,6 +114,27 @@ class ssAppMain(window.SingletonWindow):
         """
         lst = []
         for elem in glob.glob("data/voices/*"):
+            if os.path.isdir(elem):
+                lst.append(os.path.basename(elem))
+        return lst
+
+    def resetEnvironment(self):
+        """
+        Resets the environment settings. This function searches environments and sets the first found one as default. If no environment is available, it reverts to using the SLF files in the sound folder.
+        """
+        if len(self.environments) == 0:
+            self.options.environment = ""
+        else:
+            self.options.environment = self.environments[0]
+
+    def getEnvironmentsList(self):
+        """
+        Searches for available environments as environment. It returns detected environment names as a list.
+
+        :rtype: list
+        """
+        lst = []
+        for elem in glob.glob("data/environments/*"):
             if os.path.isdir(elem):
                 lst.append(os.path.basename(elem))
         return lst
@@ -481,6 +504,7 @@ class ssAppMain(window.SingletonWindow):
         m.append(_("Left panning limit"))
         m.append(_("Right panning limit."))
         m.append(_("Item announcement voice"))
+        m.append(_("Footstep environment"))
         m.append(_("Language (restart to apply)"))
         m.open()
         while(True):
@@ -576,7 +600,28 @@ class ssAppMain(window.SingletonWindow):
             self.options.itemVoice = self.itemVoices[c]
             return
         # end item voices
-        if cursor == 4:  # language
+        if cursor == 4:  # environment
+            c = 0
+            for n in self.environments:  # which are we selecting?
+                if self.options.environment == n:
+                    break
+                c += 1
+            # detected the current option
+            if direction == 1 and c == len(self.environments) - 1:
+                return  # clipping
+            if direction == -1 and c == 0:
+                return  # clipping
+            c += direction
+            self.pl = environmentPlayer.EnvironmentPlayer()
+            if not self.pl.initialize(self.environments[c]):
+                self.say(_("%(envVoice)s cannot be loaded.") % {"voice": self.environments[c]})
+                return
+            self.say(self.environments[c])
+            self.pl.test()
+            self.options.environment = self.environments[c]
+            return
+        # end item voices
+        if cursor == 5:  # language
             c = 0
             for n in self.locales:  # which are we selecting?
                 if n == self.options.language:
@@ -605,9 +650,9 @@ class ssAppMain(window.SingletonWindow):
         field = gameField.GameField()
         if random.randint(0, 4999) == 1:
             self.resetMusicPitch(200)
-            field.initialize(3, 20, mode, self.options.itemVoice, True)
+            field.initialize(3, 20, mode, self.options.itemVoice, self.options.environment, True)
         else:
-            field.initialize(3, 20, mode, self.options.itemVoice)
+            field.initialize(3, 20, mode, self.options.itemVoice, self.options.environment)
         field.setLimits(self.options.leftPanningLimit, self.options.rightPanningLimit)
         while(True):
             self.frameUpdate()
@@ -625,10 +670,7 @@ class ssAppMain(window.SingletonWindow):
         # end while
         field.clear()
         self.wait(2000)
-        s = bgtsound.sound()
-        s.load(self.sounds["dead.ogg"])
-        s.pitch = random.randint(70, 130)
-        s.play()
+        self.environmentPlayer.play("fall*.ogg")
         self.wait(800)
         with open("result.txt", mode='a', encoding='utf-8') as f:
             f.write(field.exportLog())

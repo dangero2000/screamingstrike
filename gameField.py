@@ -8,6 +8,7 @@ import bgtsound
 import bonusCounter
 import collection
 import enemy
+import environmentPlayer
 import gameModes
 import globalVars
 import item
@@ -18,7 +19,7 @@ import window
 
 
 class GameField():
-    def initialize(self, x, y, mode, voice, easter=False):
+    def initialize(self, x, y, mode, voice, envVoice, easter=False):
         self.gameTimer = window.Timer()
         self.paused = False
         self.easter = easter
@@ -50,6 +51,8 @@ class GameField():
         self.destructTimer = window.Timer()
         self.itemVoicePlayer = itemVoicePlayer.ItemVoicePlayer()
         self.itemVoicePlayer.initialize(voice)
+        self.environmentPlayer = environmentPlayer.EnvironmentPlayer()
+        self.environmentPlayer.initialize(envVoice)
         self.destructPowerup = bgtsound.sound()
         self.destructPowerup.load(globalVars.appMain.sounds["destructPowerup.ogg"])
         self.destruct = bgtsound.sound()

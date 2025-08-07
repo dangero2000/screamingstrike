@@ -32,6 +32,7 @@ class GameOptions:
         self.leftPanningLimit = -100
         self.rightPanningLimit = 100
         self.itemVoice = "chris"
+        self.environment = "default"
         self.language = locale.getdefaultlocale()[0]
         if self.language is None:
             self.language = "en_US"  # OSX may fail to auto language detect when frozen
@@ -43,6 +44,7 @@ class GameOptions:
         self.leftPanningLimit = importer.leftPanningLimit
         self.rightPanningLimit = importer.rightPanningLimit
         self.itemVoice = importer.itemVoice
+        self.environment = importer.environment
         self.language = importer.language
 
     def load(self, filename):
@@ -70,10 +72,11 @@ class GameOptions:
         if self.rightPanningLimit < self.RIGHTPANNINGLIMIT_NEGATIVE_BOUNDARY:
             self.rightPanningLimit = self.RIGHTPANNINGLIMIT_NEGATIVE_BOUNDARY
         self.itemVoice = values[3]
-        self.language = values[4] if numValues > 4 else locale.getdefaultlocale()[0]
+        self.environment = values[4]
+        self.language = values[5] if numValues > 5 else locale.getdefaultlocale()[0]
         return True
 
     def save(self, filename):
-        s = "%d#%d#%d#%s#%s" % (self.bgmVolume, self.leftPanningLimit, self.rightPanningLimit, self.itemVoice, self.language)
+        s = "%d#%d#%d#%s#%s#%s" % (self.bgmVolume, self.leftPanningLimit, self.rightPanningLimit, self.itemVoice, self.environment, self.language)
         with open(filename, mode="w") as f:
             f.write(s)

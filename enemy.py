@@ -6,6 +6,7 @@
 """This module contains enemy class."""
 import bgtsound
 import random
+import environmentPlayer
 import globalVars
 import window
 
@@ -141,9 +142,4 @@ class Enemy():
 
     def playBodyfall(self):
         """Makes a bodyfall sound for this enemy. Internally called."""
-        self.bodyfall = bgtsound.sound()
-        self.bodyfall.load(globalVars.appMain.sounds["dead.ogg"])
-        self.bodyfall.pitch = random.randint(70, 130)
-        self.bodyfall.pan = self.field.getPan(self.x)
-        self.bodyfall.volume = self.field.getVolume(self.y)
-        self.bodyfall.play()
+        self.field.environmentPlayer.play("fall*.ogg" % ENVNAMES[self.type][self.identifier], self.field.getPan(self.x))
